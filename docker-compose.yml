@@ -1,0 +1,5 @@
+backuper:
+  build: .
+  command: ./backuper
+  privileged: true
+

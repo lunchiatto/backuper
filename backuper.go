@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
 	"strings"
 
 	"github.com/jasonlvhit/gocron"
+	"github.com/lunchiatto/backuper/databases"
 	"github.com/lunchiatto/backuper/stores"
 )
 
@@ -17,20 +16,18 @@ func main() {
 }
 
 func run() {
-	// Abstract this out
-	cmd := exec.Command("docker-compose", "run", "db", "pg_dump", "-U", "postgres", "-h", "db", "codequestmanager_development")
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
+	postgres := databases.BuildPostgres()
+	err := postgres.Run()
 	if err != nil {
-		fmt.Println(stderr.String())
+		fmt.Println("Sth went wrong 🙊")
 		fmt.Println(err)
+		fmt.Println(postgres.Error())
 		return
 	}
-	fmt.Printf("in all caps: %q\n", out.String())
 	store := stores.CreateS3Store()
 	// Make this return error
-	store.Upload(strings.NewReader(out.String()))
+	if err := store.Upload(strings.NewReader(postgres.Output())); err != nil {
+		fmt.Println("AWS upload error")
+		fmt.Println(err)
+	}
 }

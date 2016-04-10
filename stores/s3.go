@@ -21,15 +21,19 @@ func CreateS3Store() *S3Store {
 }
 
 // Upload uploads the file
-func (s3Store *S3Store) Upload(r io.ReadSeeker) {
-	bucketName := os.Getenv("BACKUPS_BUCKET")
+func (s3Store *S3Store) Upload(r io.ReadSeeker) error {
+	bucketName := os.Getenv("BACKUPER_BUCKET")
 	uploadResult, err := s3Store.svc.PutObject(&s3.PutObjectInput{
 		Body:   r,
 		Bucket: &bucketName,
 		Key:    fileName(),
 	})
+	if err != nil {
+		return err
+	}
+	fmt.Println("Successful upload")
 	fmt.Println(uploadResult)
-	fmt.Println(err)
+	return nil
 }
 
 func fileName() *string {
