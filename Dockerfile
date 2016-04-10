@@ -1,13 +1,12 @@
 # we need this image
 FROM golang:1.5.3
 
-RUN curl -sSL https://get.docker.com/ | sh
-VOLUME /var/lib/docker
+RUN apt-get update -qq && \
+    apt-get install -y postgresql-client-9.4
 
-RUN go get "github.com/aws/aws-sdk-go" \
-           "github.com/jasonlvhit/gocron" \
-           "github.com/go-ini/ini" \
-           "github.com/jmespath/go-jmespath"
+RUN go get "github.com/kruszczynski/barkup" \
+           "launchpad.net/goamz/s3" \
+           "github.com/jasonlvhit/gocron"
 
 ENV APP_HOME=${GOPATH}/src/github.com/lunchiatto/backuper
 RUN mkdir -p $APP_HOME

@@ -2,32 +2,35 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"os"
 
 	"github.com/jasonlvhit/gocron"
-	"github.com/lunchiatto/backuper/databases"
-	"github.com/lunchiatto/backuper/stores"
+	"github.com/kruszczynski/barkup"
 )
 
 func main() {
-	gocron.Every(1).Second().Do(run)
+	gocron.Every(5).Minutes().Do(run)
 
 	<-gocron.Start()
 }
 
 func run() {
-	postgres := databases.BuildPostgres()
-	err := postgres.Run()
-	if err != nil {
-		fmt.Println("Sth went wrong 🙊")
-		fmt.Println(err)
-		fmt.Println(postgres.Error())
-		return
+	postgres := &barkup.Postgres{
+		Host:     os.Getenv("BACKUPER_CONTAINER"),
+		Port:     os.Getenv("BACKUPER_DB_PORT"),
+		DB:       os.Getenv("BACKUPER_DB_NAME"),
+		Username: os.Getenv("BACKUPER_DB_USER"),
 	}
-	store := stores.CreateS3Store()
-	// Make this return error
-	if err := store.Upload(strings.NewReader(postgres.Output())); err != nil {
-		fmt.Println("AWS upload error")
+
+	// Configure a S3 storer
+	s3 := &barkup.S3{
+		Region:       os.Getenv("AWS_REGION"),
+		Bucket:       os.Getenv("BACKUPER_BUCKET"),
+		AccessKey:    os.Getenv("AWS_ACCESS_KEY_ID"),
+		ClientSecret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+	}
+
+	if err := postgres.Export().To("/", s3); err != nil {
 		fmt.Println(err)
 	}
 }
