@@ -15,3 +15,4 @@ ADD . $APP_HOME
 
 # Build dependencies and the ws binary
 RUN go build
+CMD ["./backuper"]

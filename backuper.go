@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jasonlvhit/gocron"
 	"github.com/kruszczynski/barkup"
 )
 
 func main() {
+	fmt.Println("Let's back it all up")
 	gocron.Every(5).Minutes().Do(run)
 
 	<-gocron.Start()
@@ -29,8 +31,8 @@ func run() {
 		AccessKey:    os.Getenv("AWS_ACCESS_KEY_ID"),
 		ClientSecret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 	}
-
 	if err := postgres.Export().To("/", s3); err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("%s: Backuping\n", time.Now().String())
 }
